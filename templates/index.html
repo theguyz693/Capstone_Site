@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAPSTONE PROJECT TEAM 212 | Indoor Navigation Using Graph Based Models(demo) </title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='luxury-style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Hero Header -->
+        <div class="hero-header">
+            <h1>CAPSTONE PROJECT TEAM 212</h1>
+            <p class="tagline">Indoor Navigation Using Graph Based Models(demo)</p>
+            <div class="specs">
+                <div class="spec-item">
+                    <div class="spec-value">10</div>
+                    <div class="spec-label">Advanced Algorithms</div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-value">2</div>
+                    <div class="spec-label">Floor Coverage</div>
+                </div>
+                <div class="spec-item">
+                    <div class="spec-value">18</div>
+                    <div class="spec-label">Node Network</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <!-- Control Panel -->
+        <div class="premium-card" id="configure">
+            <h2 class="card-title">ROUTE CONFIGURATION</h2>
+            <form method="POST">
+                <div class="control-panel">
+                    <div class="control-group">
+                        <label for="start">🚀 LAUNCH POINT</label>
+                        <select name="start" id="start" required>
+                            <option value="">Select Starting Node...</option>
+                            {% for node in available_nodes %}
+                            <option value="{{ node }}">{{ node }}{% if node.startswith('S') %} (Stairs){% else %} (Room){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="end">🎯 DESTINATION</label>
+                        <select name="end" id="end" required>
+                            <option value="">Select Destination Node...</option>
+                            {% for node in available_nodes %}
+                            <option value="{{ node }}">{{ node }}{% if node.startswith('S') %} (Stairs){% else %} (Room){% endif %}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="control-group">
+                        <label for="algorithm">⚙️ ALGORITHM ENGINE</label>
+                        <select name="algorithm" id="algorithm">
+                            <option value="bfs">BFS - Breadth-First Search</option>
+                            <option value="dfs">DFS - Depth-First Search</option>
+                            <option value="dijkstra" selected>Dijkstra's Algorithm</option>
+                            <option value="astar">A* (A-Star) - Heuristic</option>
+                            <option value="bellman_ford">Bellman-Ford</option>
+                            <option value="floyd_warshall">Floyd-Warshall</option>
+                            <option value="johnson">Johnson's Algorithm</option>
+                            <option value="mcsp">Multi-Criteria Pathfinder</option>
+                            <option value="dynamic">Dynamic Re-routing</option>
+                            <option value="contraction_hierarchies">Contraction Hierarchies</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mode-selector">
+                    <input type="checkbox" id="compare_mode" name="compare_mode">
+                    <label for="compare_mode">📊 COMPARISON MODE - Test all 10 algorithms simultaneously</label>
+                </div>
+
+                <button type="submit" class="launch-btn">
+                    🏁 CALCULATE OPTIMAL ROUTE
+                </button>
+            </form>
+        </div>
+
+        <!-- Single Algorithm Result -->
+        {% if result %}
+        <div class="premium-card" id="results">
+            <h2 class="card-title">NAVIGATION RESULTS</h2>
+            
+            <h3 style="font-family: 'Orbitron', sans-serif; color: #00D9FF; font-size: 2rem; margin-bottom: 2rem;">
+                {{ result.name }}
+            </h3>
+
+            <div class="performance-grid">
+                <div class="perf-stat">
+                    <div class="perf-value">{{ result.path_length }}</div>
+                    <div class="perf-label">Path Nodes</div>
+                </div>
+                <div class="perf-stat">
+                    <div class="perf-value">{{ result.cost }}</div>
+                    <div class="perf-label">Total Cost</div>
+                </div>
+                <div class="perf-stat">
+                    <div class="perf-value">{{ result.nodes_explored }}</div>
+                    <div class="perf-label">Nodes Explored</div>
+                </div>
+                <div class="perf-stat">
+                    <div class="perf-value">{{ result.execution_time }}</div>
+                    <div class="perf-label">Time (ms)</div>
+                </div>
+            </div>
+
+            <div class="route-display">
+                <h3>🗺️ OPTIMAL ROUTE</h3>
+                <div class="route-path">{{ result.path }}</div>
+            </div>
+
+            <div class="info-panels">
+                <div class="info-panel pros">
+                    <h4>✅ ADVANTAGES</h4>
+                    <ul>
+                        {% for pro in result.pros %}
+                        <li>{{ pro }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="info-panel cons">
+                    <h4>⚠️ LIMITATIONS</h4>
+                    <ul>
+                        {% for con in result.cons %}
+                        <li>{{ con }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="highlight-box">
+                <strong>🎯 OPTIMAL FOR:</strong> {{ result.best_for }}
+            </div>
+
+            <div class="highlight-box">
+                <strong>⚡ COMPLEXITY:</strong>
+                <span class="complexity-badge">{{ result.complexity }}</span>
+            </div>
+        </div>
+
+        <!-- Interactive Visual Map -->
+        <div class="premium-card visual-navigator">
+            <h2 class="card-title">VISUAL NAVIGATION DISPLAY</h2>
+            
+            <div class="nav-display-grid">
+                <!-- Interactive SVG Canvas -->
+                <div class="svg-canvas-container">
+                    <h3>🎯 INTERACTIVE PATHFINDER</h3>
+                    <div class="interactive-canvas" id="pathCanvas">
+                        <!-- Floor labels -->
+                        <div class="floor-label floor-2">FLOOR 2</div>
+                        <div class="floor-label floor-1">FLOOR 1</div>
+                        <div class="floor-label floor-0">FLOOR 0</div>
+                        <!-- Nodes and SVG will be added by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Dataset Diagram -->
+                <div class="diagram-container">
+                    <h3>📊 DATASET DIAGRAM</h3>
+                    <div class="diagram-wrapper">
+                        <img src="{{ url_for('static', filename='floorplan.png') }}" alt="Building Graph Diagram">
+                    </div>
+                    <p style="text-align: center; margin-top: 1rem; color: #666; font-size: 0.95rem;">
+                        Graph topology showing all nodes and connections
+                    </p>
+                </div>
+            </div>
+
+            <p style="text-align: center; margin-top: 2rem; color: #C0C0C0; font-size: 1.1rem;">
+                <strong>LEGEND:</strong> 
+                <span style="color: #00D9FF;">🔵 START</span> | 
+                <span style="color: #0bb321;">🟢 PATH</span> | 
+                <span style="color: #E31837;">🔴 DESTINATION</span> | 
+                <span style="color: #D4AF37;">🟡 STAIRS</span>
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Comparison Results -->
+        {% if comparison_results %}
+        <div class="premium-card">
+            <h2 class="card-title">PERFORMANCE LEADERBOARD</h2>
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>RANK</th>
+                        <th>ALGORITHM</th>
+                        <th>ROUTE</th>
+                        <th>COST</th>
+                        <th>NODES</th>
+                        <th>EXPLORED</th>
+                        <th>TIME (ms)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for algo in comparison_results %}
+                    <tr>
+                        <td>
+                            <span class="rank-position rank-{{ loop.index if loop.index <= 3 else 'other' }}">
+                                #{{ loop.index }}
+                            </span>
+                        </td>
+                        <td style="font-family: 'Orbitron', sans-serif; font-weight: 700; color: #D4AF37;">
+                            {{ algo.name }}
+                        </td>
+                        <td style="font-family: 'Rajdhani', monospace; font-size: 0.9rem; color: #00D9FF;">
+                            {{ algo.path }}
+                        </td>
+                        <td><strong style="color: #39FF14;">{{ algo.cost }}</strong></td>
+                        <td>{{ algo.path_length }}</td>
+                        <td>{{ algo.nodes_explored }}</td>
+                        <td><strong style="color: #FFD700;">{{ algo.execution_time }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="7" style="padding: 0; border: none;">
+                            <div style="background: linear-gradient(135deg, rgba(15, 15, 15, 0.95) 0%, rgba(10, 10, 10, 0.95) 100%); padding: 2rem; margin: 0.5rem 0;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.5rem;">
+                                    <div>
+                                        <strong style="color: #39FF14; font-family: 'Orbitron', sans-serif; font-size: 1.1rem;">✓ ADVANTAGES:</strong>
+                                        <ul style="margin-top: 0.75rem; padding-left: 2rem; color: #E5E4E2;">
+                                            {% for pro in algo.pros %}
+                                            <li style="margin: 0.5rem 0;">{{ pro }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <strong style="color: #D4AF37; font-family: 'Orbitron', sans-serif; font-size: 1.1rem;">⚠ LIMITATIONS:</strong>
+                                        <ul style="margin-top: 0.75rem; padding-left: 2rem; color: #E5E4E2;">
+                                            {% for con in algo.cons %}
+                                            <li style="margin: 0.5rem 0;">{{ con }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div style="padding-top: 1rem; border-top: 1px solid rgba(212, 175, 55, 0.3);">
+                                    <strong style="color: #00D9FF;">🎯 OPTIMAL FOR:</strong> 
+                                    <span style="color: #C0C0C0;">{{ algo.best_for }}</span>
+                                </div>
+                                <div style="margin-top: 1rem;">
+                                    <strong style="color: #00D9FF;">⚡ COMPLEXITY:</strong>
+                                    <span class="complexity-badge">{{ algo.complexity }}</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <!-- Premium Footer -->
+        <div class="premium-footer">
+            <h3>CAPSTONE PROJECT</h3>
+            <p>This is just a demo for the first review, not the final project.</p>
+            <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.7;">
+                Team Members : PES2UG23AM067, 069, 100, 916 
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='navigator.js') }}"></script>
+</body>
+</html>
